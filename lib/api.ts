@@ -1,12 +1,13 @@
 import axios from "axios";
 import { useAuthStore } from "@/store/authStore";
 
-const DEFAULT_LOCAL_BACKEND = "http://127.0.0.1:8001";
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/backend";
+const DEPLOY_BACKEND_URL = "https://wrapped-licensed-political-river.trycloudflare.com";
+const DEFAULT_LOCAL_BACKEND = DEPLOY_BACKEND_URL;
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || `${DEPLOY_BACKEND_URL}`;
 const DIRECT_BACKEND_BASE =
   process.env.NEXT_PUBLIC_BACKEND_URL ||
   process.env.NEXT_PUBLIC_BACKEND_PUBLIC_URL ||
-  (typeof window === "undefined" ? DEFAULT_LOCAL_BACKEND : "/backend");
+  DEPLOY_BACKEND_URL;
 const MUTATION_COOLDOWN_MS = 10_000;
 const mutationCooldowns = new Map<string, number>();
 
