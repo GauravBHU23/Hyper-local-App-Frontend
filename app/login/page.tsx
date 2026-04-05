@@ -6,7 +6,7 @@ import { Loader2, Lock, Mail, MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
-import { authApi } from "@/lib/api";
+import { authApi, getApiErrorMessage } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 
 export default function LoginPage() {
@@ -31,7 +31,7 @@ export default function LoginPage() {
       toast.success(`Welcome back, ${user.name}!`);
       router.push("/");
     } catch (err: any) {
-      toast.error(err.response?.data?.detail || "Login failed. Please try again.");
+      toast.error(getApiErrorMessage(err, "Login failed. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -49,7 +49,7 @@ export default function LoginPage() {
       toast.success(res.data?.message || "OTP sent to your email");
       setOtpSent(true);
     } catch (err: any) {
-      toast.error(err.response?.data?.detail || "Could not send OTP");
+      toast.error(getApiErrorMessage(err, "Could not send OTP"));
     } finally {
       setLoading(false);
     }
@@ -69,7 +69,7 @@ export default function LoginPage() {
       toast.success(`Welcome back, ${user.name}!`);
       router.push("/");
     } catch (err: any) {
-      toast.error(err.response?.data?.detail || "OTP verification failed");
+      toast.error(getApiErrorMessage(err, "OTP verification failed"));
     } finally {
       setLoading(false);
     }

@@ -6,7 +6,7 @@ import { Loader2, Lock, Mail, MapPin, Phone, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
-import { authApi } from "@/lib/api";
+import { authApi, getApiErrorMessage } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 
 type RegisterForm = {
@@ -45,7 +45,7 @@ export default function RegisterPage() {
       toast.success(`Welcome, ${user.name}!`);
       router.push("/");
     } catch (err: any) {
-      toast.error(err.response?.data?.detail || "Registration failed");
+      toast.error(getApiErrorMessage(err, "Registration failed"));
     } finally {
       setLoading(false);
     }

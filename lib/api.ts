@@ -3,11 +3,11 @@ import { useAuthStore } from "@/store/authStore";
 
 const DEPLOY_BACKEND_URL = "https://wrapped-licensed-political-river.trycloudflare.com";
 const DEFAULT_LOCAL_BACKEND = DEPLOY_BACKEND_URL;
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || `${DEPLOY_BACKEND_URL}`;
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/backend";
 const DIRECT_BACKEND_BASE =
   process.env.NEXT_PUBLIC_BACKEND_URL ||
   process.env.NEXT_PUBLIC_BACKEND_PUBLIC_URL ||
-  DEPLOY_BACKEND_URL;
+  (typeof window === "undefined" ? DEFAULT_LOCAL_BACKEND : "/backend");
 const MUTATION_COOLDOWN_MS = 10_000;
 const mutationCooldowns = new Map<string, number>();
 
@@ -99,6 +99,31 @@ function attachInterceptors(instance: typeof api) {
 
 attachInterceptors(api);
 attachInterceptors(directApi);
+
+export function getApiErrorMessage(error: any, fallback = "Something went wrong") {
+  const detail = error?.response?.data?.detail;
+
+  if (typeof detail === "string" && detail.trim()) {
+    return detail;
+  }
+
+  if (Array.isArray(detail) && detail.length > 0) {
+    const first = detail[0];
+    if (typeof first === "string" && first.trim()) {
+      return first;
+    }
+    if (first?.msg) {
+      return String(first.msg);
+    }
+  }
+
+  const message = error?.response?.data?.message || error?.message;
+  if (typeof message === "string" && message.trim()) {
+    return message;
+  }
+
+  return fallback;
+}
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
 
