@@ -3,15 +3,32 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Loader2, Lock, Mail, MapPin } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 
 import { authApi, getApiErrorMessage } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 
+type LoginRole = "customer" | "provider" | "admin";
+
+const ROLE_OPTIONS: {
+  value: LoginRole;
+  label: string;
+  description: string;
+}[] = [
+  { value: "customer", label: "Customer", description: "Book services and manage your bookings." },
+  { value: "provider", label: "Provider", description: "Manage jobs, profile, and live availability." },
+  { value: "admin", label: "Admin", description: "Moderate users, providers, bookings, and support." },
+];
+
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { setAuth } = useAuthStore();
+  const initialRole = (searchParams.get("role") as LoginRole) || "customer";
+  const [selectedRole, setSelectedRole] = useState<LoginRole>(
+    ROLE_OPTIONS.some((role) => role.value === initialRole) ? initialRole : "customer"
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
@@ -27,9 +44,19 @@ export default function LoginPage() {
       const res = await authApi.login(email, password);
       const { access_token, user } = res.data;
 
+      if (selectedRole === "admin" && !user.is_admin) {
+        toast.error("This account does not have admin access.");
+        return;
+      }
+
+      if (selectedRole === "provider" && !user.is_provider) {
+        toast.error("This account is not a provider account yet. Complete provider profile setup first.");
+        return;
+      }
+
       setAuth(user, access_token);
       toast.success(`Welcome back, ${user.name}!`);
-      router.push("/");
+      router.push(selectedRole === "admin" ? "/admin" : selectedRole === "provider" ? "/provider" : "/");
     } catch (err: any) {
       toast.error(getApiErrorMessage(err, "Login failed. Please try again."));
     } finally {
@@ -65,9 +92,20 @@ export default function LoginPage() {
     try {
       const res = await authApi.verifyLoginOtp(email.trim(), otp.trim());
       const { access_token, user } = res.data;
+
+      if (selectedRole === "admin" && !user.is_admin) {
+        toast.error("This account does not have admin access.");
+        return;
+      }
+
+      if (selectedRole === "provider" && !user.is_provider) {
+        toast.error("This account is not a provider account yet. Complete provider profile setup first.");
+        return;
+      }
+
       setAuth(user, access_token);
       toast.success(`Welcome back, ${user.name}!`);
-      router.push("/");
+      router.push(selectedRole === "admin" ? "/admin" : selectedRole === "provider" ? "/provider" : "/");
     } catch (err: any) {
       toast.error(getApiErrorMessage(err, "OTP verification failed"));
     } finally {
@@ -90,6 +128,31 @@ export default function LoginPage() {
 
         <div className="card shadow-lg">
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                Continue as
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {ROLE_OPTIONS.map((role) => (
+                  <button
+                    key={role.value}
+                    type="button"
+                    onClick={() => setSelectedRole(role.value)}
+                    className={
+                      selectedRole === role.value
+                        ? "rounded-xl border border-orange-500 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-700"
+                        : "rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600"
+                    }
+                  >
+                    {role.label}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-2 text-xs text-slate-500">
+                {ROLE_OPTIONS.find((role) => role.value === selectedRole)?.description}
+              </p>
+            </div>
+
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">
                 Email
@@ -203,7 +266,7 @@ export default function LoginPage() {
           <p className="mt-4 text-center text-sm text-slate-500">
             Don't have an account?{" "}
             <Link
-              href="/register"
+              href={`/register?role=${selectedRole}`}
               className="font-medium text-orange-600 hover:underline"
             >
               Create one
