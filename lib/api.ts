@@ -292,7 +292,7 @@ export const supportApi = {
 
 export const uploadsApi = {
   upload: (formData: FormData) =>
-    directApi.post("/api/uploads/", formData, {
+    directApi.post("/api/uploads", formData, {
       headers: {},
     }),
   getMy: () =>
