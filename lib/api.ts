@@ -21,6 +21,11 @@ export const directApi = axios.create({
 });
 
 function getAuthHeaders() {
+  const token = getAuthToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+function getAuthToken() {
   let token = useAuthStore.getState().token;
 
   if (typeof window !== "undefined") {
@@ -41,7 +46,7 @@ function getAuthHeaders() {
     }
   }
 
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  return token || null;
 }
 
 function createCooldownError(message: string) {
@@ -292,15 +297,22 @@ export const supportApi = {
 
 export const uploadsApi = {
   upload: (formData: FormData) =>
-    directApi.post("/api/uploads", formData, {
-      headers: {},
+    api.post(`/api/uploads${getAuthToken() ? `?access_token=${encodeURIComponent(getAuthToken()!)}` : ""}`, formData, {
+      headers: {
+        "Content-Type": undefined as unknown as string,
+        ...getAuthHeaders(),
+      },
     }),
   getMy: () =>
-    directApi.get("/api/uploads/my", {
-      headers: {},
+    api.get(`/api/uploads/my${getAuthToken() ? `?access_token=${encodeURIComponent(getAuthToken()!)}` : ""}`, {
+      headers: {
+        ...getAuthHeaders(),
+      },
     }),
   delete: (assetId: string) =>
-    directApi.delete(`/api/uploads/${assetId}`, {
-      headers: {},
+    api.delete(`/api/uploads/${assetId}${getAuthToken() ? `?access_token=${encodeURIComponent(getAuthToken()!)}` : ""}`, {
+      headers: {
+        ...getAuthHeaders(),
+      },
     }),
 };
