@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { Loader2, Lock, Mail, MapPin } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -21,7 +21,7 @@ const ROLE_OPTIONS: {
   { value: "admin", label: "Admin", description: "Moderate users, providers, bookings, and support." },
 ];
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setAuth } = useAuthStore();
@@ -275,6 +275,22 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function LoginPageFallback() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-orange-50 to-rose-50 p-4">
+      <Loader2 size={28} className="animate-spin text-orange-500" />
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginPageFallback />}>
+      <LoginPageContent />
+    </Suspense>
   );
 }
 
